@@ -28,6 +28,8 @@ st.set_page_config(page_title="영양제 Check 챗봇", page_icon="💊")
 @st.cache_resource
 # PDF를 카테고리 폴더 단위로 로드하고 LangChain Document로 변환
 def load_and_split_pdfs_by_category(base_path: str) -> dict:
+    base_path = os.path.join(os.path.dirname(__file__), base_path)
+
     all_docs_by_category = {}
     for category in os.listdir(base_path):
         category_path = os.path.join(base_path, category)
