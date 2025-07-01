@@ -1,0 +1,11 @@
+# API 키 노출 방지
+.streamlit/secrets.toml
+# Python 캐시 파일
+__pycache__/
+*.pyc
+# Jupyter 노트북 체크포인트
+.ipynb_checkpoints/
+# 환경 설정 파일 (선택)
+.env
+
+faiss_index/
