@@ -95,22 +95,12 @@ db.save_local("./faiss_index/db")
 print(f"\n✅ 전체 벡터 DB 생성 완료! 총 문서 수: {len(db.docstore._dict)}개")
 
 # 쿼리 -> 유사도 검색 -> 결과 리턴
-@st.cache_resource
-def load_vectorstore():
-    embeddings = OpenAIEmbeddings(
-        model="text-embedding-3-small",
-        openai_api_key=st.secrets["OPENAI_API_KEY"]
-    )
-    return FAISS.load_local("faiss_index/db", embeddings)
-
 def search_products(ingredient_query, avoid=None, top_k: int = 5):
     """
     ingredient_query : 추천 성분(리스트 또는 쉼표 문자열)
     avoid           : 제외할 성분 리스트(옵션)
     top_k           : 최종 반환 개수
     """
-    
-    db = load_vectorstore()
 
     # ── [A] 입력 전처리 & 로그 ──────────────────────────────
     if isinstance(ingredient_query, list):

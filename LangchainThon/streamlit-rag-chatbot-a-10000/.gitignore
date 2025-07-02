@@ -8,4 +8,4 @@ __pycache__/
 # 환경 설정 파일 (선택)
 .env
 
-faiss_index/
+# faiss_index/
