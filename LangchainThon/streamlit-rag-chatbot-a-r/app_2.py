@@ -170,7 +170,7 @@ def build_user_query(age: int, gender: str, disease: str, taking: str, prefers: 
 # ──────────────────────────────────────────────
 # Ⅳ. Streamlit UI
 # ──────────────────────────────────────────────
-st.header("💊 영양제 Check RAG 챗봇")
+st.header("💊 영양제 Check!")
 
 chat_history = StreamlitChatMessageHistory(key="chat_messages")
 
@@ -276,7 +276,7 @@ if submitted:
                 #   Streamlit 화면에 결과 표시
                 # ──────────────────────────────
                 if product_docs:
-                    st.subheader("🔎 추천 성분과 연관된 제품 예시 (상위 5개)")
+                    st.subheader("💊 영양제 Check!")
 
                     for idx, doc in enumerate(product_docs, 1):
                         name = doc.metadata.get("product", f"제품 {idx}")
