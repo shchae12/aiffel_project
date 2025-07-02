@@ -94,7 +94,6 @@ for i in range(0, TOTAL_PAGES, PAGES_PER_BATCH):
 db.save_local("./faiss_index/db")
 print(f"\n✅ 전체 벡터 DB 생성 완료! 총 문서 수: {len(db.docstore._dict)}개")
 
-# 쿼리 -> 유사도 검색 -> 결과 리턴
 def search_products(ingredient_query, avoid=None, top_k: int = 5):
     """
     ingredient_query : 추천 성분(리스트 또는 쉼표 문자열)
