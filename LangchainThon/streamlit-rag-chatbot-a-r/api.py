@@ -8,6 +8,7 @@ from langchain.docstore.document import Document
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 import time
+import re
 
 # 2. 공공데이터 API에서 건강기능식품 수집 (XML 파싱)
 def fetch_health_product_data(max_pages=5):
@@ -94,30 +95,51 @@ additional_documents = [item_to_document(item) for item in additional_items]
 db.add_documents(additional_documents)
 print(f"🔄 벡터 저장소에 추가 완료! 전체 문서 수: {len(db.docstore._dict)}")
 
-# # 7. 유사도 검색 테스트
-# query = "철분, 콜라겐"
-# results = db.similarity_search(query, k=3)
 
-# for i, doc in enumerate(results, 1):
-#     # print(f"\n[{i}] 제품명: {doc.metadata.get('product')}")
-#     print(doc.page_content)
-
-# def search_products(ingredient_query: str, top_k: int = 5):
-#     """
-#     '비타민 D, 콜린' 같은 쉼표 구분 문자열을 받아
-#     유사도가 높은 제품 Document 리스트를 반환합니다.
-#     """
-#     return db.similarity_search(ingredient_query, k=top_k)
-
-def search_products(ingredient_query, top_k: int = 5):
+def search_products(ingredient_query, avoid=None, top_k: int = 5):
     """
-    ▸ ingredient_query
-        •  ["비타민 D", "콜린"]  ← 리스트
-        •  "비타민 D, 콜린"    ← 쉼표로 묶인 문자열
-    ▸ top_k : 반환할 문서 개수
+    ingredient_query : 추천 성분(리스트 또는 쉼표 문자열)
+    avoid           : 제외할 성분 리스트(옵션)
+    top_k           : 최종 반환 개수
     """
-    # 리스트가 들어오면 쉼표 문자열로 변환
+
+    # ── [A] 입력 전처리 & 로그 ──────────────────────────────
     if isinstance(ingredient_query, list):
         ingredient_query = ", ".join(ingredient_query)
+    # avoid가 문자열이면 쉼표 기준 분리
+    if isinstance(avoid, str):
+        avoid = [a.strip() for a in avoid.split(",") if a.strip()]
 
-    return db.similarity_search(ingredient_query, k=top_k)
+    print(f"\n[DEBUG] ingredient_query = {ingredient_query}")
+    print(f"[DEBUG] avoid            = {avoid}")
+
+    # ── [B] 후보군 검색 ───────────────────────────────────
+    candidate_docs = db.similarity_search(ingredient_query, k=max(1, top_k * 4))
+    print(f"[DEBUG] candidate_docs   = {len(candidate_docs)}개")
+
+    # ── [C] ‘avoid’ 성분 필터 ─────────────────────────────
+    if avoid:
+        avoid_lower = [a.lower() for a in avoid]
+        filtered_docs = []
+
+        for doc in candidate_docs:
+            text_lower = doc.page_content.lower()
+            # 현재 문서에서 발견된 피해야 할 성분 목록
+            matched = [a for a in avoid_lower if a in text_lower]
+
+            if matched:
+                # 어떤 성분 때문에 제외됐는지 표시
+                product_name = doc.metadata.get("product", "이름없음")
+                print(f"  ↪︎ [FILTER] {product_name}  (제외 이유: {', '.join(matched)})")
+                continue
+
+            filtered_docs.append(doc)
+            if len(filtered_docs) >= top_k:
+                break
+
+        print(f"[DEBUG] filtered_docs    = {len(filtered_docs)}개 최종 반환\n")
+        return filtered_docs
+
+    # ── [D] 필터링 불필요 시 ───────────────────────────────
+    print(f"[DEBUG] filtered_docs    = {top_k}개 최종 반환 (필터 없음)\n")
+    return candidate_docs[:top_k]
